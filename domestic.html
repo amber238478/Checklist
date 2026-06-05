@@ -38,7 +38,7 @@
   }
 
   .header {
-    background: var(--accent-orange);
+    background: #f2a86c;
     color: var(--cream);
     padding: 28px 24px 22px;
     text-align: center;
@@ -82,6 +82,39 @@
     padding: 12px 16px 0;
     display: flex;
     justify-content: center;
+    gap: 12px;
+  }
+  .page-links .btn-reset:active {
+    background: var(--accent-orange);
+    border-color: var(--accent-orange);
+    color: var(--cream);
+  }
+  .page-links .toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid;
+    background: transparent;
+    cursor: pointer;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    letter-spacing: 0.03em;
+  }
+  .page-links .toggle-btn.dive {
+    border-color: var(--dive-teal);
+    color: var(--dive-teal);
+  }
+  .page-links .toggle-btn.dive.active,
+  .page-links .toggle-btn.dive:active {
+    background: rgba(46,139,128,0.14);
+    color: var(--dive-teal);
+  }
+  .page-links .toggle-btn:active {
+    transform: scale(0.98);
   }
 
   .legend {
@@ -148,6 +181,12 @@
     box-shadow: 0 2px 10px var(--shadow);
     overflow: hidden;
     border: 1px solid var(--brown-faint);
+  }
+  .section.optional {
+    display: none;
+  }
+  .section.optional.visible {
+    display: block;
   }
   .section-header {
     padding: 12px 16px;
@@ -266,8 +305,8 @@
     letter-spacing: 0.05em;
   }
   .btn-reset:hover {
-    background: var(--brown);
-    border-color: var(--brown);
+    background: var(--accent-orange);
+    border-color: var(--accent-orange);
     color: var(--cream);
   }
 
@@ -300,6 +339,9 @@
 
 <div class="page-links">
   <a class="btn-reset" href="index.html">← 回主清單</a>
+  <button class="toggle-btn dive" id="toggleDive" onclick="toggleSection('dive')">
+    <span class="toggle-icon">🤿</span> 加入潛水項目
+  </button>
 </div>
 
 <div class="legend">
@@ -388,11 +430,41 @@ const SECTIONS = [
       '帽子',
     ]
   },
+  {
+    id: 'dive',
+    icon: '🤿',
+    title: '潛水裝備',
+    optional: true,
+    optionalType: 'dive',
+    items: [
+      '泳衣',
+      '泳帽',
+      '面鏡',
+      '呼吸管',
+      '蛙鞋',
+      '防寒衣 / 潛水衣',
+      '手套',
+      '除霧劑',
+      '防曬潛水套',
+    ]
+  },
 ];
 
 const LS_STATE = 'domestic_packlist_state_v1';
+const LS_DIVE = 'domestic_packlist_dive_v1';
 
 let state = JSON.parse(localStorage.getItem(LS_STATE) || '{}');
+let showDive = localStorage.getItem(LS_DIVE) === 'true';
+
+function toggleSection(type) {
+  if (type === 'dive') {
+    showDive = !showDive;
+    localStorage.setItem(LS_DIVE, showDive);
+    document.getElementById('toggleDive').classList.toggle('active', showDive);
+    document.querySelector('.section.dive-section').classList.toggle('visible', showDive);
+  }
+  updateProgress();
+}
 
 function saveState() {
   localStorage.setItem(LS_STATE, JSON.stringify(state));
@@ -430,6 +502,8 @@ function renderItem(sectionId, idx) {
 function updateProgress() {
   let total = 0, done = 0;
   SECTIONS.forEach(sec => {
+    const isVisible = !sec.optional || (sec.optionalType === 'dive' ? showDive : true);
+    if (!isVisible) return;
     sec.items.forEach((_, idx) => {
       total++;
       const key = itemKey(sec.id, idx);
@@ -474,7 +548,10 @@ function buildHTML() {
   const container = document.getElementById('checklistContainer');
   let html = '';
   SECTIONS.forEach(sec => {
-    html += `<div class="section" id="sec_${sec.id}">`;
+    let secClass = 'section';
+    if (sec.optional) secClass += ' optional ' + sec.optionalType + '-section';
+    if (sec.optional && showDive && sec.optionalType === 'dive') secClass += ' visible';
+    html += `<div class="${secClass}" id="sec_${sec.id}">`;
     html += `<div class="section-header">`;
     html += `<span class="section-icon">${sec.icon}</span>`;
     html += `<span class="section-title">${sec.title}</span>`;
@@ -496,6 +573,9 @@ function buildHTML() {
 }
 
 buildHTML();
+if (showDive) {
+  document.getElementById('toggleDive').classList.add('active');
+}
 renderAll();
 updateProgress();
 </script>

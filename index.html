@@ -136,17 +136,22 @@
     border-color: var(--ski-purple);
     color: var(--ski-purple);
   }
-  .toggle-btn.ski.active {
-    background: var(--ski-purple);
-    color: white;
+  .toggle-btn.ski.active,
+  .toggle-btn.ski:active {
+    background: rgba(123,90,166,0.14);
+    color: var(--ski-purple);
   }
   .toggle-btn.dive {
     border-color: var(--dive-teal);
     color: var(--dive-teal);
   }
-  .toggle-btn.dive.active {
-    background: var(--dive-teal);
-    color: white;
+  .toggle-btn.dive.active,
+  .toggle-btn.dive:active {
+    background: rgba(46,139,128,0.14);
+    color: var(--dive-teal);
+  }
+  .toggle-btn:active {
+    transform: scale(0.98);
   }
   .toggle-icon { font-size: 1rem; }
 
@@ -331,9 +336,9 @@
     letter-spacing: 0.05em;
   }
   .page-links .btn-reset:hover {
-    background: transparent;
-    border-color: #d3ca43;
-    color: #d3ca43;
+    background: #f2a86c;
+    border-color: #f2a86c;
+    color: var(--cream);
   }
   .page-links .btn-reset:active {
     background: #f2a86c;
