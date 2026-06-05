@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>✈️ 行李清單</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --cream: #faf6f0;
@@ -39,7 +39,7 @@
 
   /* HEADER */
   .header {
-    background: var(--brown);
+    background: var(--accent-orange);
     color: var(--cream);
     padding: 28px 24px 22px;
     text-align: center;
@@ -65,9 +65,9 @@
     position: relative;
   }
   .header h1 {
-    font-family: 'Caveat', cursive;
+    font-family: 'Noto Sans TC', 'Noto Serif TC', sans-serif;
     font-size: 2rem;
-    font-weight: 700;
+    font-weight: 500;
     letter-spacing: 0.03em;
     position: relative;
   }
@@ -313,6 +313,33 @@
     gap: 10px;
     flex-wrap: wrap;
   }
+  .page-links {
+    padding: 12px 16px 0;
+    display: flex;
+    justify-content: center;
+  }
+  .page-links .btn-reset {
+    padding: 10px 22px;
+    border-radius: 20px;
+    border: 2px solid #d3ca43;
+    background: transparent;
+    color: #d3ca43;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .page-links .btn-reset:hover {
+    background: transparent;
+    border-color: #d3ca43;
+    color: #d3ca43;
+  }
+  .page-links .btn-reset:active {
+    background: #f2a86c;
+    border-color: #f2a86c;
+    color: var(--cream);
+  }
   .btn-reset {
     padding: 10px 22px;
     border-radius: 20px;
@@ -360,6 +387,9 @@
   <p>出發前兩次確認，放心去玩！</p>
 </div>
 
+<div class="page-links">
+  <a class="btn-reset" href="domestic.html">📄 國內旅行清單</a>
+</div>
 <div class="legend">
   <div class="legend-item">
     <div class="legend-dot c1"></div>
@@ -503,58 +533,6 @@ const SECTIONS = [
       '泳衣組',
       '酒精濕紙巾',
       '垃圾袋 / 髒衣袋',
-    ]
-  },
-  {
-    id: 'domestic',
-    icon: '🏡',
-    title: '國內旅行清單',
-    optional: false,
-    items: [
-      '隨身包',
-      '行動電源 + 充電線',
-      '錢包',
-      '信用卡',
-      '身分證 + 健保卡',
-      '現金',
-      '手機繩',
-      '太陽眼鏡',
-      '耳機',
-      '行李袋',
-      '充電組（Type-C、Lightning、充電頭）',
-      '化妝袋',
-      '保養品袋（小白瓶、水楊酸、A醇、洗面乳）',
-      '牙刷組',
-      '舌苔刷 + 舌苔凝膠',
-      '卸妝棉',
-      '棉片',
-      '梳子（捲梳）',
-      '護唇膏',
-      '護手霜',
-      '噴劑',
-      '小毛巾',
-      '拖鞋',
-      '眼罩',
-      '耳塞 × 2',
-      'EVE 退燒止痛藥',
-      '化痰藥',
-      '感冒藥（大正）',
-      '過敏藥（鼻噴 + 口服）',
-      '合力他命',
-      '表飛鳴（腸胃）',
-      '止瀉藥',
-      '喉嚨痛舒緩藥',
-      '液態 OK 繃',
-      '暈車藥',
-      '每日換洗衣服（數量依天數）',
-      '外套',
-      '內衣 / 內褲',
-      '免洗褲',
-      '襪子',
-      '睡衣睡褲',
-      '衛生棉',
-      '防曬外套',
-      '帽子',
     ]
   },
   {
