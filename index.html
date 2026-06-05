@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✈️ 行李清單</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf6f0;
+    --paper: #f4ede3;
+    --warm-white: #fffcf7;
+    --brown: #3d2b1f;
+    --brown-mid: #6b4c35;
+    --brown-light: #a87c5f;
+    --brown-faint: #e8d9cc;
+    --accent-orange: #d4734a;
+    --accent-green: #5a8a65;
+    --accent-blue: #4a6fa5;
+    --ski-purple: #7b5ea7;
+    --dive-teal: #2e8b80;
+    --check1: #d4734a;
+    --check2: #5a8a65;
+    --shadow: rgba(61,43,31,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    background-image: 
+      radial-gradient(ellipse at 20% 10%, rgba(212,115,74,0.07) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(90,138,101,0.07) 0%, transparent 50%);
+    font-family: 'Noto Serif TC', serif;
+    color: var(--brown);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--brown);
+    color: var(--cream);
+    padding: 28px 24px 22px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -30px; left: -30px; right: -30px; bottom: -30px;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(255,255,255,0.02) 20px,
+      rgba(255,255,255,0.02) 21px
+    );
+  }
+  .header-emoji {
+    font-size: 2.2rem;
+    display: block;
+    margin-bottom: 6px;
+    position: relative;
+  }
+  .header h1 {
+    font-family: 'Caveat', cursive;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    position: relative;
+  }
+  .header p {
+    font-size: 0.78rem;
+    opacity: 0.65;
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+    position: relative;
+  }
+
+  /* LEGEND BAR */
+  .legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 20px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--brown-faint);
+    font-size: 0.72rem;
+    color: var(--brown-mid);
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-dot {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 2px solid;
+  }
+  .legend-dot.c1 { border-color: var(--check1); background: transparent; }
+  .legend-dot.c1.filled { background: var(--check1); }
+  .legend-dot.c2 { border-color: var(--check2); background: transparent; }
+  .legend-dot.c2.filled { background: var(--check2); }
+
+  /* TOGGLE SWITCHES */
+  .toggles {
+    display: flex;
+    gap: 12px;
+    padding: 14px 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--brown-faint);
+  }
+  .toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid;
+    background: transparent;
+    cursor: pointer;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    letter-spacing: 0.03em;
+  }
+  .toggle-btn.ski {
+    border-color: var(--ski-purple);
+    color: var(--ski-purple);
+  }
+  .toggle-btn.ski.active {
+    background: var(--ski-purple);
+    color: white;
+  }
+  .toggle-btn.dive {
+    border-color: var(--dive-teal);
+    color: var(--dive-teal);
+  }
+  .toggle-btn.dive.active {
+    background: var(--dive-teal);
+    color: white;
+  }
+  .toggle-icon { font-size: 1rem; }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    padding: 10px 20px 0;
+    background: var(--warm-white);
+  }
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--brown-light);
+    margin-bottom: 5px;
+  }
+  .progress-bar {
+    height: 5px;
+    background: var(--brown-faint);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--check1), var(--check2));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* SECTION */
+  .section {
+    margin: 16px 16px 0;
+    background: var(--warm-white);
+    border-radius: 14px;
+    box-shadow: 0 2px 10px var(--shadow);
+    overflow: hidden;
+    border: 1px solid var(--brown-faint);
+  }
+  .section.optional {
+    display: none;
+  }
+  .section.optional.visible {
+    display: block;
+  }
+  .section-header {
+    padding: 12px 16px;
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--brown-faint);
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-header.ski-header { background: #f0ebf8; border-bottom-color: #d5c8ea; }
+  .section-header.dive-header { background: #e8f5f3; border-bottom-color: #c2deda; }
+  .section-icon { font-size: 1.1rem; }
+  .section-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    flex: 1;
+  }
+  .section-count {
+    font-size: 0.7rem;
+    color: var(--brown-light);
+    background: var(--brown-faint);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .section-chevron {
+    font-size: 0.7rem;
+    color: var(--brown-light);
+    transition: transform 0.2s;
+  }
+  .section.collapsed .section-chevron { transform: rotate(-90deg); }
+  .section.collapsed .items-list { display: none; }
+
+  /* ITEMS */
+  .items-list { padding: 4px 0 8px; }
+
+  /* COLUMN HEADERS */
+  .col-headers {
+    display: grid;
+    grid-template-columns: 1fr 32px 32px;
+    gap: 4px;
+    padding: 4px 14px 4px;
+    font-size: 0.64rem;
+    color: var(--brown-light);
+    letter-spacing: 0.06em;
+    text-align: center;
+    border-bottom: 1px dashed var(--brown-faint);
+    margin-bottom: 2px;
+  }
+  .col-headers span:first-child { text-align: left; }
+
+  .item {
+    display: grid;
+    grid-template-columns: 1fr 32px 32px;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    transition: background 0.15s;
+  }
+  .item:hover { background: rgba(61,43,31,0.03); }
+  .item.checked-both { opacity: 0.45; }
+
+  .item-label {
+    font-size: 0.82rem;
+    line-height: 1.3;
+    color: var(--brown);
+    padding-right: 4px;
+  }
+  .item.checked-both .item-label {
+    text-decoration: line-through;
+    color: var(--brown-light);
+  }
+
+  /* CHECKBOXES */
+  .check-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .check-box {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    border: 2px solid;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .check-box.c1 {
+    border-color: var(--check1);
+    color: white;
+  }
+  .check-box.c1.checked {
+    background: var(--check1);
+    border-color: var(--check1);
+  }
+  .check-box.c1.checked::after { content: '✓'; }
+  .check-box.c2 {
+    border-color: var(--check2);
+    color: white;
+  }
+  .check-box.c2.checked {
+    background: var(--check2);
+    border-color: var(--check2);
+  }
+  .check-box.c2.checked::after { content: '✓'; }
+
+  /* RESET BUTTON */
+  .footer-actions {
+    padding: 20px 16px 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn-reset {
+    padding: 10px 22px;
+    border-radius: 20px;
+    border: 2px solid var(--brown-light);
+    background: transparent;
+    color: var(--brown-mid);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .btn-reset:hover {
+    background: var(--brown);
+    border-color: var(--brown);
+    color: var(--cream);
+  }
+
+  /* DIVIDER LABEL */
+  .sub-label {
+    font-size: 0.67rem;
+    color: var(--brown-light);
+    letter-spacing: 0.08em;
+    padding: 7px 14px 2px;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* NOTE */
+  .note-text {
+    font-size: 0.72rem;
+    color: var(--brown-light);
+    text-align: center;
+    padding: 16px 20px 0;
+    font-style: italic;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-emoji">✈️</span>
+  <h1>行李打包清單</h1>
+  <p>出發前兩次確認，放心去玩！</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-dot c1"></div>
+    <span>第一次檢查（打包時）</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot c1 filled"></div>
+    <div class="legend-dot c2 filled"></div>
+    <span>第二次確認（出門前）</span>
+  </div>
+</div>
+
+<div class="toggles">
+  <button class="toggle-btn ski" id="toggleSki" onclick="toggleSection('ski')">
+    <span class="toggle-icon">⛷️</span> 加入滑雪項目
+  </button>
+  <button class="toggle-btn dive" id="toggleDive" onclick="toggleSection('dive')">
+    <span class="toggle-icon">🤿</span> 加入潛水項目
+  </button>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-info">
+    <span>完成進度</span>
+    <span id="progressText">0 / 0</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+</div>
+
+<div id="checklistContainer"></div>
+
+<div class="footer-actions">
+  <button class="btn-reset" onclick="resetAll()">🔄 全部重置</button>
+  <button class="btn-reset" onclick="resetSection1()">清除第一次</button>
+  <button class="btn-reset" onclick="resetSection2()">清除第二次</button>
+</div>
+
+<p class="note-text">每次出行可以重置清單重新使用 ✨</p>
+
+<script>
+const SECTIONS = [
+  {
+    id: 'carry',
+    icon: '👜',
+    title: '隨身 / 手提袋',
+    optional: false,
+    items: [
+      '行動電源 + 充電線',
+      '充電組（Type-C、Lightning、充電頭）',
+      '錢包',
+      '信用卡（熊本熊、星展、Cube、玉山提款卡）',
+      '只帶健保卡',
+      '當地現金',
+      '台幣備用現金',
+      'SIM 卡',
+      '手機繩',
+      '太陽眼鏡',
+      '壓縮袋',
+      '壓縮幫浦',
+      '秤重器',
+    ]
+  },
+  {
+    id: 'toiletry',
+    icon: '🪥',
+    title: '盥洗 & 保養',
+    optional: false,
+    items: [
+      '化妝袋',
+      '保養品袋（小白瓶、水楊酸、A醇、洗面乳）',
+      '牙刷組',
+      '舌苔刷 + 舌苔凝膠',
+      '卸妝棉',
+      '棉片一小袋',
+      '梳子',
+      '護唇膏',
+      '護手霜',
+      '噴劑 / 發泡錠',
+      '小毛巾',
+      '拖鞋',
+    ]
+  },
+  {
+    id: 'medicine',
+    icon: '💊',
+    title: '藥品',
+    optional: false,
+    items: [
+      'EVE 退燒止痛藥',
+      '化痰藥',
+      '感冒藥（大正）',
+      '過敏藥（鼻噴 + 口服）',
+      '合力他命',
+      '表飛鳴（腸胃）',
+      '止瀉藥',
+      '喉嚨痛舒緩藥',
+      '液態 OK 繃',
+      '生理食鹽水',
+      '暈車藥',
+    ]
+  },
+  {
+    id: 'clothes',
+    icon: '👗',
+    title: '衣物 & 寢具',
+    optional: false,
+    items: [
+      '每日換洗衣服（數量依天數）',
+      '備用衣服 × 1',
+      '外套',
+      '內衣 / 內褲',
+      '免洗褲',
+      '襪子',
+      '睡衣睡褲',
+      '衛生棉（夜用 × 2、24cm × 2）',
+      '防曬外套',
+      '帽子',
+    ]
+  },
+  {
+    id: 'comfort',
+    icon: '😴',
+    title: '住宿舒眠',
+    optional: false,
+    items: [
+      '耳塞 × 2',
+      '眼罩',
+      '耳機',
+    ]
+  },
+  {
+    id: 'bag',
+    icon: '🧳',
+    title: '行李箱確認',
+    optional: false,
+    items: [
+      '行李秤重確認',
+      '防水袋',
+      '泳衣組',
+      '酒精濕紙巾',
+      '垃圾袋 / 髒衣袋',
+    ]
+  },
+  {
+    id: 'domestic',
+    icon: '🏡',
+    title: '國內旅行清單',
+    optional: false,
+    items: [
+      '隨身包',
+      '行動電源 + 充電線',
+      '錢包',
+      '信用卡',
+      '身分證 + 健保卡',
+      '現金',
+      '手機繩',
+      '太陽眼鏡',
+      '耳機',
+      '行李袋',
+      '充電組（Type-C、Lightning、充電頭）',
+      '化妝袋',
+      '保養品袋（小白瓶、水楊酸、A醇、洗面乳）',
+      '牙刷組',
+      '舌苔刷 + 舌苔凝膠',
+      '卸妝棉',
+      '棉片',
+      '梳子（捲梳）',
+      '護唇膏',
+      '護手霜',
+      '噴劑',
+      '小毛巾',
+      '拖鞋',
+      '眼罩',
+      '耳塞 × 2',
+      'EVE 退燒止痛藥',
+      '化痰藥',
+      '感冒藥（大正）',
+      '過敏藥（鼻噴 + 口服）',
+      '合力他命',
+      '表飛鳴（腸胃）',
+      '止瀉藥',
+      '喉嚨痛舒緩藥',
+      '液態 OK 繃',
+      '暈車藥',
+      '每日換洗衣服（數量依天數）',
+      '外套',
+      '內衣 / 內褲',
+      '免洗褲',
+      '襪子',
+      '睡衣睡褲',
+      '衛生棉',
+      '防曬外套',
+      '帽子',
+    ]
+  },
+  {
+    id: 'ski',
+    icon: '⛷️',
+    title: '滑雪裝備',
+    optional: true,
+    optionalType: 'ski',
+    headerClass: 'ski-header',
+    items: [
+      '雪衣',
+      '雪褲',
+      '防摔褲',
+      '發熱衣（薄）',
+      '發熱衣（厚）',
+      '排汗衣 × 2',
+      '超級暖 × 2',
+      '超級暖褲襪 × 2',
+      '雪襪 × 2',
+      '滑雪手套',
+      '圍脖',
+      '毛帽',
+      '酸痛藥膏',
+      '紗布',
+      '透氣膠帶',
+    ]
+  },
+  {
+    id: 'dive',
+    icon: '🤿',
+    title: '潛水裝備',
+    optional: true,
+    optionalType: 'dive',
+    headerClass: 'dive-header',
+    items: [
+      '泳衣上衣',
+      '泳衣內衣',
+      '泳褲',
+      '泳帽',
+      '面鏡',
+      '呼吸管',
+      '蛙鞋',
+      '防寒衣（上身）',
+      '防寒衣（下身）',
+      '手套',
+      '襪子 / 襪套',
+      '配重帶',
+      '鉛塊 × 2',
+      '除霧劑',
+      '沐浴包',
+      '毛巾',
+      '暈船藥',
+    ]
+  },
+];
+
+const LS_STATE = 'packlist_state_v1';
+const LS_SKI   = 'packlist_ski_v1';
+const LS_DIVE  = 'packlist_dive_v1';
+
+let state    = JSON.parse(localStorage.getItem(LS_STATE) || '{}');
+let showSki  = localStorage.getItem(LS_SKI)  === 'true';
+let showDive = localStorage.getItem(LS_DIVE) === 'true';
+
+function saveState() {
+  localStorage.setItem(LS_STATE, JSON.stringify(state));
+}
+
+function itemKey(sectionId, idx) {
+  return `${sectionId}_${idx}`;
+}
+
+function toggleSection(type) {
+  if (type === 'ski') {
+    showSki = !showSki;
+    localStorage.setItem(LS_SKI, showSki);
+    document.getElementById('toggleSki').classList.toggle('active', showSki);
+    document.querySelector('.section.ski-section').classList.toggle('visible', showSki);
+  } else {
+    showDive = !showDive;
+    localStorage.setItem(LS_DIVE, showDive);
+    document.getElementById('toggleDive').classList.toggle('active', showDive);
+    document.querySelector('.section.dive-section').classList.toggle('visible', showDive);
+  }
+  updateProgress();
+}
+
+function toggleCollapse(sectionId) {
+  const el = document.getElementById(`sec_${sectionId}`);
+  el.classList.toggle('collapsed');
+}
+
+function toggle(sectionId, idx, col) {
+  const key = itemKey(sectionId, idx);
+  if (!state[key]) state[key] = { c1: false, c2: false };
+  state[key][col] = !state[key][col];
+  renderItem(sectionId, idx);
+  updateProgress();
+  saveState();
+}
+
+function renderItem(sectionId, idx) {
+  const key = itemKey(sectionId, idx);
+  const s = state[key] || { c1: false, c2: false };
+  const c1el = document.getElementById(`c1_${key}`);
+  const c2el = document.getElementById(`c2_${key}`);
+  const row = document.getElementById(`row_${key}`);
+  if (c1el) c1el.classList.toggle('checked', s.c1);
+  if (c2el) c2el.classList.toggle('checked', s.c2);
+  if (row) row.classList.toggle('checked-both', s.c1 && s.c2);
+}
+
+function updateProgress() {
+  let total = 0, done = 0;
+  SECTIONS.forEach(sec => {
+    const isVisible = !sec.optional || (sec.optionalType === 'ski' ? showSki : showDive);
+    if (!isVisible) return;
+    sec.items.forEach((_, idx) => {
+      total++;
+      const key = itemKey(sec.id, idx);
+      const s = state[key] || {};
+      if (s.c1 && s.c2) done++;
+    });
+  });
+  document.getElementById('progressText').textContent = `${done} / ${total}`;
+  const pct = total > 0 ? (done / total * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function resetAll() {
+  if (!confirm('確定要重置所有打勾嗎？')) return;
+  state = {};
+  saveState();
+  renderAll();
+  updateProgress();
+}
+
+function resetSection1() {
+  Object.keys(state).forEach(k => { state[k].c1 = false; });
+  saveState();
+  renderAll();
+  updateProgress();
+}
+
+function resetSection2() {
+  Object.keys(state).forEach(k => { state[k].c2 = false; });
+  saveState();
+  renderAll();
+  updateProgress();
+}
+
+function renderAll() {
+  SECTIONS.forEach(sec => {
+    sec.items.forEach((_, idx) => renderItem(sec.id, idx));
+  });
+}
+
+function buildHTML() {
+  const container = document.getElementById('checklistContainer');
+  let html = '';
+  SECTIONS.forEach(sec => {
+    let secClass = 'section';
+    if (sec.optional) secClass += ' optional ' + sec.optionalType + '-section';
+    const headerClass = sec.headerClass || '';
+    html += `<div class="${secClass}" id="sec_${sec.id}">`;
+    html += `<div class="section-header ${headerClass}" onclick="toggleCollapse('${sec.id}')">`;
+    html += `<span class="section-icon">${sec.icon}</span>`;
+    html += `<span class="section-title">${sec.title}</span>`;
+    html += `<span class="section-count">${sec.items.length} 項</span>`;
+    html += `<span class="section-chevron">▼</span>`;
+    html += `</div>`;
+    html += `<div class="items-list">`;
+    html += `<div class="col-headers"><span>項目</span><span>1st</span><span>2nd</span></div>`;
+    sec.items.forEach((item, idx) => {
+      const key = itemKey(sec.id, idx);
+      html += `<div class="item" id="row_${key}">`;
+      html += `<span class="item-label">${item}</span>`;
+      html += `<div class="check-wrap"><div class="check-box c1" id="c1_${key}" onclick="toggle('${sec.id}',${idx},'c1')"></div></div>`;
+      html += `<div class="check-wrap"><div class="check-box c2" id="c2_${key}" onclick="toggle('${sec.id}',${idx},'c2')"></div></div>`;
+      html += `</div>`;
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+buildHTML();
+// restore toggle button & section visibility from localStorage
+if (showSki) {
+  document.getElementById('toggleSki').classList.add('active');
+  document.querySelector('.section.ski-section').classList.add('visible');
+}
+if (showDive) {
+  document.getElementById('toggleDive').classList.add('active');
+  document.querySelector('.section.dive-section').classList.add('visible');
+}
+renderAll();
+updateProgress();
+</script>
+</body>
+</html>
