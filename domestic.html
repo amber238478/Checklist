@@ -195,7 +195,17 @@
     align-items: center;
     gap: 8px;
     border-bottom: 1px solid var(--brown-faint);
+    cursor: pointer;
+    user-select: none;
   }
+  .section-header.dive-header { background: #e8f5f3; border-bottom-color: #c2deda; }
+  .section-chevron {
+    font-size: 0.7rem;
+    color: var(--brown-light);
+    transition: transform 0.2s;
+  }
+  .section.collapsed .section-chevron { transform: rotate(-90deg); }
+  .section.collapsed .items-list { display: none; }
   .section-icon { font-size: 1.1rem; }
   .section-title {
     font-size: 0.88rem;
@@ -436,6 +446,7 @@ const SECTIONS = [
     title: '潛水裝備',
     optional: true,
     optionalType: 'dive',
+    headerClass: 'dive-header',
     items: [
       '泳衣',
       '泳帽',
@@ -551,11 +562,13 @@ function buildHTML() {
     let secClass = 'section';
     if (sec.optional) secClass += ' optional ' + sec.optionalType + '-section';
     if (sec.optional && showDive && sec.optionalType === 'dive') secClass += ' visible';
+    const headerClass = sec.headerClass || '';
     html += `<div class="${secClass}" id="sec_${sec.id}">`;
-    html += `<div class="section-header">`;
+    html += `<div class="section-header ${headerClass}" onclick="toggleCollapse('${sec.id}')">`;
     html += `<span class="section-icon">${sec.icon}</span>`;
     html += `<span class="section-title">${sec.title}</span>`;
     html += `<span class="section-count">${sec.items.length} 項</span>`;
+    html += `<span class="section-chevron">▼</span>`;
     html += `</div>`;
     html += `<div class="items-list">`;
     html += `<div class="col-headers"><span>項目</span><span>1st</span><span>2nd</span></div>`;
