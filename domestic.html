@@ -114,6 +114,15 @@
     background: rgba(46,139,128,0.14);
     color: var(--dive-teal);
   }
+  .page-links .toggle-btn.custom {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+  }
+  .page-links .toggle-btn.custom:hover,
+  .page-links .toggle-btn.custom:active {
+    background: rgba(74,111,165,0.14);
+    color: var(--accent-blue);
+  }
   .page-links .toggle-btn:active {
     transform: scale(0.98);
   }
@@ -200,6 +209,7 @@
     user-select: none;
   }
   .section-header.dive-header { background: #e8f5f3; border-bottom-color: #c2deda; }
+  .section-header.custom-header { background: #e8eef7; border-bottom-color: #cdd9ec; }
   .section-chevron {
     font-size: 0.7rem;
     color: var(--brown-light);
@@ -247,6 +257,8 @@
   .item:hover { background: rgba(61,43,31,0.03); }
   .section.dive-section .item:hover { background: rgba(46,139,128,0.06); }
   .section.dive-section .section-header:hover { background: #ddf0ed; }
+  .section.custom-section .item:hover { background: rgba(74,111,165,0.06); }
+  .section.custom-section .section-header:hover { background: #dde6f4; }
   .item.checked-both { opacity: 0.45; }
 
   .item-label {
@@ -297,6 +309,28 @@
     border-color: var(--check2);
   }
   .check-box.c2.checked::after { content: '✓'; }
+
+  .col-headers.custom-headers,
+  .item.custom-item {
+    grid-template-columns: 1fr 32px 32px 28px;
+  }
+  .del-btn {
+    width: 22px; height: 22px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--brown-light);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .del-btn:hover {
+    background: var(--accent-orange);
+    color: var(--cream);
+  }
 
   .footer-actions {
     padding: 20px 16px 0;
@@ -354,6 +388,9 @@
   <a class="btn-reset" href="index.html">← 回主清單</a>
   <button class="toggle-btn dive" id="toggleDive" onclick="toggleSection('dive')">
     <span class="toggle-icon">🤿</span> 加入潛水項目
+  </button>
+  <button class="toggle-btn custom" id="addItemBtn" onclick="addCustomItem()">
+    <span class="toggle-icon">➕</span> 新增物品
   </button>
 </div>
 
@@ -464,11 +501,61 @@ const SECTIONS = [
   },
 ];
 
-const LS_STATE = 'domestic_packlist_state_v1';
-const LS_DIVE = 'domestic_packlist_dive_v1';
+const LS_STATE  = 'domestic_packlist_state_v1';
+const LS_DIVE   = 'domestic_packlist_dive_v1';
+const LS_CUSTOM = 'domestic_packlist_custom_v1';
 
-let state = JSON.parse(localStorage.getItem(LS_STATE) || '{}');
-let showDive = localStorage.getItem(LS_DIVE) === 'true';
+let state       = JSON.parse(localStorage.getItem(LS_STATE) || '{}');
+let showDive    = localStorage.getItem(LS_DIVE) === 'true';
+let customItems = JSON.parse(localStorage.getItem(LS_CUSTOM) || '[]');
+
+function getSections() {
+  if (!customItems.length) return SECTIONS;
+  return SECTIONS.concat([{
+    id: 'custom',
+    icon: '➕',
+    title: '本次新增項目',
+    optional: false,
+    headerClass: 'custom-header',
+    custom: true,
+    items: customItems,
+  }]);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function addCustomItem() {
+  const name = prompt('輸入要新增的物品名稱：');
+  if (!name || !name.trim()) return;
+  customItems.push(name.trim());
+  localStorage.setItem(LS_CUSTOM, JSON.stringify(customItems));
+  buildHTML();
+  renderAll();
+  updateProgress();
+}
+
+function removeCustomItem(idx) {
+  if (!confirm('確定要刪除這個項目嗎？')) return;
+  customItems.splice(idx, 1);
+  localStorage.setItem(LS_CUSTOM, JSON.stringify(customItems));
+  const newState = {};
+  Object.keys(state).forEach(k => {
+    const m = k.match(/^custom_(\d+)$/);
+    if (!m) { newState[k] = state[k]; return; }
+    const i = parseInt(m[1], 10);
+    if (i < idx) newState[k] = state[k];
+    else if (i > idx) newState[`custom_${i - 1}`] = state[k];
+  });
+  state = newState;
+  saveState();
+  buildHTML();
+  renderAll();
+  updateProgress();
+}
 
 function toggleSection(type) {
   if (type === 'dive') {
@@ -515,7 +602,7 @@ function renderItem(sectionId, idx) {
 
 function updateProgress() {
   let total = 0, done = 0;
-  SECTIONS.forEach(sec => {
+  getSections().forEach(sec => {
     const isVisible = !sec.optional || (sec.optionalType === 'dive' ? showDive : true);
     if (!isVisible) return;
     sec.items.forEach((_, idx) => {
@@ -553,7 +640,7 @@ function resetSection2() {
 }
 
 function renderAll() {
-  SECTIONS.forEach(sec => {
+  getSections().forEach(sec => {
     sec.items.forEach((_, idx) => renderItem(sec.id, idx));
   });
 }
@@ -561,10 +648,11 @@ function renderAll() {
 function buildHTML() {
   const container = document.getElementById('checklistContainer');
   let html = '';
-  SECTIONS.forEach(sec => {
+  getSections().forEach(sec => {
     let secClass = 'section';
     if (sec.optional) secClass += ' optional ' + sec.optionalType + '-section';
     if (sec.optional && showDive && sec.optionalType === 'dive') secClass += ' visible';
+    if (sec.custom) secClass += ' custom-section';
     const headerClass = sec.headerClass || '';
     html += `<div class="${secClass}" id="sec_${sec.id}">`;
     html += `<div class="section-header ${headerClass}" onclick="toggleCollapse('${sec.id}')">`;
@@ -574,13 +662,18 @@ function buildHTML() {
     html += `<span class="section-chevron">▼</span>`;
     html += `</div>`;
     html += `<div class="items-list">`;
-    html += `<div class="col-headers"><span>項目</span><span>1st</span><span>2nd</span></div>`;
+    const colHeaderClass = sec.custom ? 'col-headers custom-headers' : 'col-headers';
+    html += `<div class="${colHeaderClass}"><span>項目</span><span>1st</span><span>2nd</span>${sec.custom ? '<span></span>' : ''}</div>`;
     sec.items.forEach((item, idx) => {
       const key = itemKey(sec.id, idx);
-      html += `<div class="item" id="row_${key}">`;
-      html += `<span class="item-label">${item}</span>`;
+      const itemClass = sec.custom ? 'item custom-item' : 'item';
+      html += `<div class="${itemClass}" id="row_${key}">`;
+      html += `<span class="item-label">${escapeHtml(item)}</span>`;
       html += `<div class="check-wrap"><div class="check-box c1" id="c1_${key}" onclick="toggle('${sec.id}',${idx},'c1')"></div></div>`;
       html += `<div class="check-wrap"><div class="check-box c2" id="c2_${key}" onclick="toggle('${sec.id}',${idx},'c2')"></div></div>`;
+      if (sec.custom) {
+        html += `<div class="check-wrap"><button class="del-btn" onclick="removeCustomItem(${idx})">✕</button></div>`;
+      }
       html += `</div>`;
     });
     html += `</div></div>`;
