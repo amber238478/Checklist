@@ -793,7 +793,11 @@ function buildHTML() {
   let html = '';
   getSections().forEach(sec => {
     let secClass = 'section';
-    if (sec.optional) secClass += ' optional ' + sec.optionalType + '-section';
+    if (sec.optional) {
+      secClass += ' optional ' + sec.optionalType + '-section';
+      const visible = sec.optionalType === 'ski' ? showSki : showDive;
+      if (visible) secClass += ' visible';
+    }
     if (sec.custom) secClass += ' custom-section';
     const headerClass = sec.headerClass || '';
     html += `<div class="${secClass}" id="sec_${sec.id}">`;
