@@ -511,7 +511,7 @@ let customItems = JSON.parse(localStorage.getItem(LS_CUSTOM) || '[]');
 
 function getSections() {
   if (!customItems.length) return SECTIONS;
-  return SECTIONS.concat([{
+  return [{
     id: 'custom',
     icon: '➕',
     title: '本次新增項目',
@@ -519,7 +519,7 @@ function getSections() {
     headerClass: 'custom-header',
     custom: true,
     items: customItems,
-  }]);
+  }].concat(SECTIONS);
 }
 
 function escapeHtml(str) {
