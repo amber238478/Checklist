@@ -234,7 +234,7 @@
   .items-list { padding: 4px 0 8px; }
   .col-headers {
     display: grid;
-    grid-template-columns: 1fr 32px 32px;
+    grid-template-columns: 1fr 32px 32px 28px;
     gap: 4px;
     padding: 4px 14px 4px;
     font-size: 0.64rem;
@@ -248,7 +248,7 @@
 
   .item {
     display: grid;
-    grid-template-columns: 1fr 32px 32px;
+    grid-template-columns: 1fr 32px 32px 28px;
     align-items: center;
     gap: 4px;
     padding: 5px 14px;
@@ -310,10 +310,6 @@
   }
   .check-box.c2.checked::after { content: '✓'; }
 
-  .col-headers.custom-headers,
-  .item.custom-item {
-    grid-template-columns: 1fr 32px 32px 28px;
-  }
   .del-btn {
     width: 22px; height: 22px;
     border: none;
@@ -374,6 +370,69 @@
     font-style: italic;
     line-height: 1.6;
   }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(61,43,31,0.4);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--warm-white);
+    border-radius: 14px;
+    padding: 20px;
+    width: min(320px, 100%);
+    box-shadow: 0 8px 30px var(--shadow);
+  }
+  .modal-box h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 4px;
+  }
+  .modal-box label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--brown-light);
+    letter-spacing: 0.05em;
+    margin: 14px 0 5px;
+  }
+  .modal-box select,
+  .modal-box input {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--brown-faint);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.85rem;
+    background: var(--cream);
+    color: var(--brown);
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .modal-actions .btn-reset {
+    padding: 9px 20px;
+    font-size: 0.78rem;
+  }
+  .modal-actions .btn-confirm {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+  }
+  .modal-actions .btn-confirm:hover {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: var(--cream);
+  }
 </style>
 </head>
 <body>
@@ -389,7 +448,7 @@
   <button class="toggle-btn dive" id="toggleDive" onclick="toggleSection('dive')">
     <span class="toggle-icon">🤿</span> 加入潛水項目
   </button>
-  <button class="toggle-btn custom" id="addItemBtn" onclick="addCustomItem()">
+  <button class="toggle-btn custom" id="addItemBtn" onclick="openAddItemModal()">
     <span class="toggle-icon">➕</span> 新增物品
   </button>
 </div>
@@ -425,6 +484,20 @@
 </div>
 
 <p class="note-text">國內旅行專用清單，出發前確認更安心。</p>
+
+<div class="modal-overlay" id="addItemModal">
+  <div class="modal-box">
+    <h3>新增物品</h3>
+    <label>選擇分類</label>
+    <select id="newItemSection"></select>
+    <label>物品名稱</label>
+    <input type="text" id="newItemName" placeholder="輸入物品名稱">
+    <div class="modal-actions">
+      <button class="btn-reset" onclick="closeAddItemModal()">取消</button>
+      <button class="btn-reset btn-confirm" onclick="confirmAddItem()">新增</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const SECTIONS = [
@@ -501,25 +574,25 @@ const SECTIONS = [
   },
 ];
 
-const LS_STATE  = 'domestic_packlist_state_v1';
-const LS_DIVE   = 'domestic_packlist_dive_v1';
-const LS_CUSTOM = 'domestic_packlist_custom_v1';
+const LS_STATE   = 'domestic_packlist_state_v1';
+const LS_DIVE    = 'domestic_packlist_dive_v1';
+const LS_CUSTOM  = 'domestic_packlist_custom_v1';
+const LS_REMOVED = 'domestic_packlist_removed_v1';
 
-let state       = JSON.parse(localStorage.getItem(LS_STATE) || '{}');
-let showDive    = localStorage.getItem(LS_DIVE) === 'true';
-let customItems = JSON.parse(localStorage.getItem(LS_CUSTOM) || '[]');
+let state        = JSON.parse(localStorage.getItem(LS_STATE) || '{}');
+let showDive     = localStorage.getItem(LS_DIVE) === 'true';
+let customRaw    = JSON.parse(localStorage.getItem(LS_CUSTOM) || '{}');
+let customItems  = Array.isArray(customRaw) ? {} : customRaw;
+let removedItems = JSON.parse(localStorage.getItem(LS_REMOVED) || '[]');
 
-function getSections() {
-  if (!customItems.length) return SECTIONS;
-  return [{
-    id: 'custom',
-    icon: '➕',
-    title: '本次新增項目',
-    optional: false,
-    headerClass: 'custom-header',
-    custom: true,
-    items: customItems,
-  }].concat(SECTIONS);
+function saveState() {
+  localStorage.setItem(LS_STATE, JSON.stringify(state));
+}
+function saveCustom() {
+  localStorage.setItem(LS_CUSTOM, JSON.stringify(customItems));
+}
+function saveRemoved() {
+  localStorage.setItem(LS_REMOVED, JSON.stringify(removedItems));
 }
 
 function escapeHtml(str) {
@@ -528,29 +601,82 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function addCustomItem() {
-  const name = prompt('輸入要新增的物品名稱：');
-  if (!name || !name.trim()) return;
-  customItems.push(name.trim());
-  localStorage.setItem(LS_CUSTOM, JSON.stringify(customItems));
+function getSections() {
+  const sections = SECTIONS.map(sec => {
+    const items = [];
+    sec.items.forEach((text, idx) => {
+      const key = `${sec.id}_${idx}`;
+      if (!removedItems.includes(key)) items.push({ text, key });
+    });
+    (customItems[sec.id] || []).forEach((text, idx) => {
+      items.push({ text, key: `${sec.id}_custom_${idx}` });
+    });
+    return Object.assign({}, sec, { items });
+  });
+
+  const extraItems = (customItems['custom'] || []).map((text, idx) => ({ text, key: `custom_custom_${idx}` }));
+  if (extraItems.length) {
+    sections.unshift({
+      id: 'custom',
+      icon: '➕',
+      title: '本次新增項目',
+      optional: false,
+      headerClass: 'custom-header',
+      items: extraItems,
+    });
+  }
+  return sections;
+}
+
+function openAddItemModal() {
+  const select = document.getElementById('newItemSection');
+  select.innerHTML = SECTIONS.map(sec => `<option value="${sec.id}">${sec.icon} ${sec.title}</option>`).join('')
+    + `<option value="custom">➕ 本次新增項目</option>`;
+  document.getElementById('newItemName').value = '';
+  document.getElementById('addItemModal').classList.add('active');
+  document.getElementById('newItemName').focus();
+}
+
+function closeAddItemModal() {
+  document.getElementById('addItemModal').classList.remove('active');
+}
+
+function confirmAddItem() {
+  const sectionId = document.getElementById('newItemSection').value;
+  const name = document.getElementById('newItemName').value.trim();
+  if (!name) return;
+  if (!customItems[sectionId]) customItems[sectionId] = [];
+  customItems[sectionId].push(name);
+  saveCustom();
+  closeAddItemModal();
   buildHTML();
   renderAll();
   updateProgress();
 }
 
-function removeCustomItem(idx) {
+function removeItem(key) {
   if (!confirm('確定要刪除這個項目嗎？')) return;
-  customItems.splice(idx, 1);
-  localStorage.setItem(LS_CUSTOM, JSON.stringify(customItems));
-  const newState = {};
-  Object.keys(state).forEach(k => {
-    const m = k.match(/^custom_(\d+)$/);
-    if (!m) { newState[k] = state[k]; return; }
-    const i = parseInt(m[1], 10);
-    if (i < idx) newState[k] = state[k];
-    else if (i > idx) newState[`custom_${i - 1}`] = state[k];
-  });
-  state = newState;
+  const m = key.match(/^(.+)_custom_(\d+)$/);
+  if (m) {
+    const sectionId = m[1];
+    const idx = parseInt(m[2], 10);
+    customItems[sectionId].splice(idx, 1);
+    if (!customItems[sectionId].length) delete customItems[sectionId];
+    saveCustom();
+    const prefix = `${sectionId}_custom_`;
+    const newState = {};
+    Object.keys(state).forEach(k => {
+      if (!k.startsWith(prefix)) { newState[k] = state[k]; return; }
+      const i = parseInt(k.slice(prefix.length), 10);
+      if (i < idx) newState[k] = state[k];
+      else if (i > idx) newState[`${prefix}${i - 1}`] = state[k];
+    });
+    state = newState;
+  } else {
+    if (!removedItems.includes(key)) removedItems.push(key);
+    saveRemoved();
+    delete state[key];
+  }
   saveState();
   buildHTML();
   renderAll();
@@ -567,30 +693,20 @@ function toggleSection(type) {
   updateProgress();
 }
 
-function saveState() {
-  localStorage.setItem(LS_STATE, JSON.stringify(state));
-}
-
-function itemKey(sectionId, idx) {
-  return `${sectionId}_${idx}`;
-}
-
 function toggleCollapse(sectionId) {
   const el = document.getElementById(`sec_${sectionId}`);
   el.classList.toggle('collapsed');
 }
 
-function toggle(sectionId, idx, col) {
-  const key = itemKey(sectionId, idx);
+function toggle(key, col) {
   if (!state[key]) state[key] = { c1: false, c2: false };
   state[key][col] = !state[key][col];
-  renderItem(sectionId, idx);
+  renderItem(key);
   updateProgress();
   saveState();
 }
 
-function renderItem(sectionId, idx) {
-  const key = itemKey(sectionId, idx);
+function renderItem(key) {
   const s = state[key] || { c1: false, c2: false };
   const c1el = document.getElementById(`c1_${key}`);
   const c2el = document.getElementById(`c2_${key}`);
@@ -605,10 +721,9 @@ function updateProgress() {
   getSections().forEach(sec => {
     const isVisible = !sec.optional || (sec.optionalType === 'dive' ? showDive : true);
     if (!isVisible) return;
-    sec.items.forEach((_, idx) => {
+    sec.items.forEach(item => {
       total++;
-      const key = itemKey(sec.id, idx);
-      const s = state[key] || {};
+      const s = state[item.key] || {};
       if (s.c1 && s.c2) done++;
     });
   });
@@ -641,7 +756,7 @@ function resetSection2() {
 
 function renderAll() {
   getSections().forEach(sec => {
-    sec.items.forEach((_, idx) => renderItem(sec.id, idx));
+    sec.items.forEach(item => renderItem(item.key));
   });
 }
 
@@ -650,9 +765,12 @@ function buildHTML() {
   let html = '';
   getSections().forEach(sec => {
     let secClass = 'section';
-    if (sec.optional) secClass += ' optional ' + sec.optionalType + '-section';
-    if (sec.optional && showDive && sec.optionalType === 'dive') secClass += ' visible';
-    if (sec.custom) secClass += ' custom-section';
+    if (sec.optional) {
+      secClass += ' optional ' + sec.optionalType + '-section';
+      const visible = sec.optionalType === 'dive' ? showDive : true;
+      if (visible) secClass += ' visible';
+    }
+    if (sec.id === 'custom') secClass += ' custom-section';
     const headerClass = sec.headerClass || '';
     html += `<div class="${secClass}" id="sec_${sec.id}">`;
     html += `<div class="section-header ${headerClass}" onclick="toggleCollapse('${sec.id}')">`;
@@ -662,18 +780,14 @@ function buildHTML() {
     html += `<span class="section-chevron">▼</span>`;
     html += `</div>`;
     html += `<div class="items-list">`;
-    const colHeaderClass = sec.custom ? 'col-headers custom-headers' : 'col-headers';
-    html += `<div class="${colHeaderClass}"><span>項目</span><span>1st</span><span>2nd</span>${sec.custom ? '<span></span>' : ''}</div>`;
-    sec.items.forEach((item, idx) => {
-      const key = itemKey(sec.id, idx);
-      const itemClass = sec.custom ? 'item custom-item' : 'item';
-      html += `<div class="${itemClass}" id="row_${key}">`;
-      html += `<span class="item-label">${escapeHtml(item)}</span>`;
-      html += `<div class="check-wrap"><div class="check-box c1" id="c1_${key}" onclick="toggle('${sec.id}',${idx},'c1')"></div></div>`;
-      html += `<div class="check-wrap"><div class="check-box c2" id="c2_${key}" onclick="toggle('${sec.id}',${idx},'c2')"></div></div>`;
-      if (sec.custom) {
-        html += `<div class="check-wrap"><button class="del-btn" onclick="removeCustomItem(${idx})">✕</button></div>`;
-      }
+    html += `<div class="col-headers"><span>項目</span><span>1st</span><span>2nd</span><span></span></div>`;
+    sec.items.forEach(item => {
+      const key = item.key;
+      html += `<div class="item" id="row_${key}">`;
+      html += `<span class="item-label">${escapeHtml(item.text)}</span>`;
+      html += `<div class="check-wrap"><div class="check-box c1" id="c1_${key}" onclick="toggle('${key}','c1')"></div></div>`;
+      html += `<div class="check-wrap"><div class="check-box c2" id="c2_${key}" onclick="toggle('${key}','c2')"></div></div>`;
+      html += `<div class="check-wrap"><button class="del-btn" onclick="removeItem('${key}')">✕</button></div>`;
       html += `</div>`;
     });
     html += `</div></div>`;
