@@ -210,6 +210,18 @@
   }
   .section-header.dive-header { background: #e8f5f3; border-bottom-color: #c2deda; }
   .section-header.custom-header { background: #e8eef7; border-bottom-color: #cdd9ec; }
+  .section-add-btn {
+    width: 26px; height: 26px;
+    border: 1px solid var(--brown-faint);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--brown-light);
+    font-size: 1rem; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0;
+    flex-shrink: 0;
+  }
+  .section-add-btn:hover { color: var(--brown); border-color: var(--brown-light); }
   .section-chevron {
     font-size: 0.7rem;
     color: var(--brown-light);
@@ -630,10 +642,11 @@ function getSections() {
   return sections;
 }
 
-function openAddItemModal() {
+function openAddItemModal(sectionId) {
   const select = document.getElementById('newItemSection');
   select.innerHTML = SECTIONS.map(sec => `<option value="${sec.id}">${sec.icon} ${sec.title}</option>`).join('')
     + `<option value="custom">➕ 本次新增項目</option>`;
+  if (sectionId) select.value = sectionId;
   document.getElementById('newItemName').value = '';
   document.getElementById('addItemModal').classList.add('active');
   document.getElementById('newItemName').focus();
@@ -779,6 +792,7 @@ function buildHTML() {
     html += `<span class="section-icon">${sec.icon}</span>`;
     html += `<span class="section-title">${sec.title}</span>`;
     html += `<span class="section-count">${sec.items.length} 項</span>`;
+    html += `<button class="section-add-btn" title="新增到此分類" onclick="event.stopPropagation(); openAddItemModal('${sec.id}')">+</button>`;
     html += `<span class="section-chevron">▼</span>`;
     html += `</div>`;
     html += `<div class="items-list">`;
